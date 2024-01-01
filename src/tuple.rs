@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 use crate::utils;
 
 #[derive(Debug, Copy, Clone)]
-struct Tuple {
+pub struct Tuple {
     x: f64,
     y: f64,
     z: f64,
@@ -101,27 +101,27 @@ impl Div<f64> for Tuple {
 }
 
 impl Tuple {
-    fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
+    pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
         Tuple { x, y, z, w }
     }
 
-    fn point(x: f64, y: f64, z: f64) -> Self {
+    pub fn point(x: f64, y: f64, z: f64) -> Self {
         Tuple { x, y, z, w: 1.0 }
     }
 
-    fn vector(x: f64, y: f64, z: f64) -> Self {
+    pub fn vector(x: f64, y: f64, z: f64) -> Self {
         Tuple { x, y, z, w: 0.0 }
     }
 
-    fn is_point(self) -> bool {
+    pub fn is_point(self) -> bool {
         utils::eq(self.w, 1.0)
     }
 
-    fn is_vector(self) -> bool {
+    pub fn is_vector(self) -> bool {
         utils::eq(self.w, 0.0)
     }
 
-    fn magnitude(self) -> f64 {
+    pub fn magnitude(self) -> f64 {
         let xx = self.x.powi(2);
         let yy = self.y.powi(2);
         let zz = self.z.powi(2);
@@ -129,11 +129,11 @@ impl Tuple {
         (xx + yy + zz + ww).sqrt()
     }
 
-    fn normalize(self) -> Self {
+    pub fn normalize(self) -> Self {
         self / self.magnitude()
     }
 
-    fn dot(self, other: Self) -> f64 {
+    pub fn dot(self, other: Self) -> f64 {
         // Only implement dot product for vectors: Here we deviate from the book,
         // because the reasons of generalizing to all dimensions don't convince me.
         // Although it is possible that I'll consider the w coordinate in the future.
@@ -143,7 +143,7 @@ impl Tuple {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
-    fn cross(self, other: Self) -> Self {
+    pub fn cross(self, other: Self) -> Self {
         // Only implement cross-product for vectors, not tuples: four-dimensional
         // cross product is more complicated and not needed
         assert!(self.is_vector());
