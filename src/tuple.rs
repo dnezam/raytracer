@@ -21,6 +21,7 @@ pub struct Tuple {
 }
 
 impl PartialEq for Tuple {
+    /// Implements approximate equality for tuples.
     fn eq(&self, other: &Self) -> bool {
         utils::eq(self.x, other.x)
             && utils::eq(self.y, other.y)
@@ -32,6 +33,7 @@ impl PartialEq for Tuple {
 impl Add for Tuple {
     type Output = Self;
 
+    /// Implements the addition of two tuples.
     fn add(self, other: Self) -> Self::Output {
         Self {
             x: self.x + other.x,
@@ -45,6 +47,7 @@ impl Add for Tuple {
 impl Sub for Tuple {
     type Output = Self;
 
+    /// Implements the subtraction of two tuples.
     fn sub(self, other: Self) -> Self::Output {
         Self {
             x: self.x - other.x,
@@ -58,6 +61,7 @@ impl Sub for Tuple {
 impl Neg for Tuple {
     type Output = Self;
 
+    /// Implements the negation of a tuple.
     fn neg(self) -> Self::Output {
         Self {
             x: -self.x,
@@ -68,10 +72,11 @@ impl Neg for Tuple {
     }
 }
 
-// Tuple * f64
+/// Scalar multiplication of the form Tuple * f64.
 impl Mul<f64> for Tuple {
     type Output = Self;
 
+    /// Implements scalar multiplication of the form: Tuple * f64.
     fn mul(self, rhs: f64) -> Self::Output {
         Self {
             x: self.x * rhs,
@@ -82,10 +87,11 @@ impl Mul<f64> for Tuple {
     }
 }
 
-// f64 * Tuple
+/// Scalar multiplication of the form f64 * Tuple.
 impl Mul<Tuple> for f64 {
     type Output = Tuple;
 
+    /// Implements scalar multiplication of the form: Tuple * f64.
     fn mul(self, rhs: Tuple) -> Self::Output {
         Self::Output {
             x: self * rhs.x,
@@ -96,10 +102,11 @@ impl Mul<Tuple> for f64 {
     }
 }
 
-// Tuple / f64
+/// Scalar division of the form Tuple / f64.
 impl Div<f64> for Tuple {
     type Output = Self;
 
+    /// Implements scalar division of the form Tuple / f64.
     fn div(self, rhs: f64) -> Self::Output {
         Self {
             x: self.x / rhs,

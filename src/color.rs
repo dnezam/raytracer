@@ -2,14 +2,25 @@ use std::ops::{Add, Mul, Sub};
 
 use crate::utils;
 
+/// Used to represent color.
+///
+/// Usually, values are between 0 and 1, with 0 meaning the color is entirely
+/// absent, and 1 meaning the color is fully present. However, we don't constrain
+/// them immediately, as the value may leave this interval while going through
+/// transformations. If we were to limit the color prematurely, we run this risk
+/// of making parts of our scene to bright or dark in the final image.
 #[derive(Debug, Copy, Clone)]
-struct Color {
-    red: f64,
-    green: f64,
-    blue: f64,
+pub struct Color {
+    /// The red component.
+    pub red: f64,
+    /// The green component.
+    pub green: f64,
+    /// The blue component.
+    pub blue: f64,
 }
 
 impl PartialEq for Color {
+    /// Implements approximate equality for colors.
     fn eq(&self, other: &Self) -> bool {
         utils::eq(self.red, other.red)
             && utils::eq(self.green, other.green)
@@ -20,6 +31,7 @@ impl PartialEq for Color {
 impl Add for Color {
     type Output = Self;
 
+    /// Implements the addition of two colors.
     fn add(self, other: Self) -> Self::Output {
         Self {
             red: self.red + other.red,
@@ -32,6 +44,7 @@ impl Add for Color {
 impl Sub for Color {
     type Output = Self;
 
+    /// Implements the subtraction of two colors.
     fn sub(self, other: Self) -> Self::Output {
         Self {
             red: self.red - other.red,
@@ -41,10 +54,11 @@ impl Sub for Color {
     }
 }
 
-// Color * f64
+/// Scalar multiplication of the form Color * f64.
 impl Mul<f64> for Color {
     type Output = Self;
 
+    /// Implements scalar multiplication of the form Color * f64.
     fn mul(self, rhs: f64) -> Self::Output {
         Self::Output {
             red: self.red * rhs,
@@ -54,10 +68,11 @@ impl Mul<f64> for Color {
     }
 }
 
-// f64 * Color
+/// Scalar multiplication of the form f64 * Color.
 impl Mul<Color> for f64 {
     type Output = Color;
 
+    /// Implements scalar multiplication of the form f64 * Color.
     fn mul(self, rhs: Color) -> Self::Output {
         Self::Output {
             red: self * rhs.red,
@@ -67,10 +82,14 @@ impl Mul<Color> for f64 {
     }
 }
 
-// Color * Color
+// Multiplication of the form Color * Color.
 impl Mul<Color> for Color {
     type Output = Self;
 
+    /// Implements multiplication of the form Color * Color.
+    ///
+    /// This is technically called the Hadamard product, Schur product
+    /// or element-wise product. It is used to blend two colors together.
     fn mul(self, rhs: Color) -> Self::Output {
         Self::Output {
             red: self.red * rhs.red,
@@ -81,6 +100,7 @@ impl Mul<Color> for Color {
 }
 
 impl Color {
+    /// Create a new color.
     pub fn new(red: f64, green: f64, blue: f64) -> Color {
         Color { red, green, blue }
     }
