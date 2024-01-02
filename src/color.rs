@@ -2,6 +2,13 @@ use std::ops::{Add, Mul, Sub};
 
 use crate::utils;
 
+/// Used to represent color in the RGB format.
+///
+/// This is separate from Color, as Color stores values between 0 and 1, while Rgb
+/// stores values between 0 to 255.
+#[derive(Debug, Copy, Clone)]
+pub struct Rgb(pub u8, pub u8, pub u8);
+
 /// Used to represent color.
 ///
 /// Usually, values are between 0 and 1, with 0 meaning the color is entirely
@@ -103,6 +110,15 @@ impl Color {
     /// Create a new color.
     pub fn new(red: f64, green: f64, blue: f64) -> Color {
         Color { red, green, blue }
+    }
+
+    /// Converts Color into Rgb.
+    pub fn to_rgb(self) -> Rgb {
+        Rgb(
+            (self.red * 255.0).round() as u8,
+            (self.green * 255.0).round() as u8,
+            (self.blue * 255.0).round() as u8,
+        )
     }
 }
 

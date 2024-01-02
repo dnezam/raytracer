@@ -1,4 +1,8 @@
-use std::ops::{Index, IndexMut};
+// TODO Check if we can loops more idiomatic/"abstract"
+use std::{
+    ops::{Index, IndexMut},
+    slice::Chunks,
+};
 
 use crate::color::Color;
 
@@ -43,7 +47,7 @@ impl IndexMut<[usize; 2]> for Canvas {
 }
 
 impl Canvas {
-    /// Create a new Canvas.
+    /// Create a new canvas.
     pub fn new(width: usize, height: usize) -> Canvas {
         Canvas {
             width,
@@ -52,19 +56,66 @@ impl Canvas {
         }
     }
 
-    /// Returns an iterator over the Canvas.
+    /// Returns an iterator over all pixels.
     pub fn iter(&self) -> impl Iterator<Item = &Color> {
         self.pixels.iter()
     }
 
-    /// Returns an iterator over the Canvas.
+    /// Returns an iterator over the rows.
+    pub fn rows(&self) -> Chunks<Color> {
+        self.pixels.chunks(self.width)
+    }
+
+    /// Returns a mutable iterator over all pixels.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Color> {
         self.pixels.iter_mut()
     }
 
-    /// Converts canvas into the PPM format.
+    /// Converts the canvas into the PPM format.
     fn to_ppm(&self) -> String {
-        todo!()
+        let header = format!("P3\n{} {}\n255", self.width, self.height);
+        let data = self
+            .rows()
+            // .., Color {1.0, 0.0, 0.0}, .. -> .., ["255", "0", "0"]
+            .map(|row| {
+                row.iter().flat_map(|color| {
+                    let rgb = color.to_rgb();
+                    [rgb.0.to_string(), rgb.1.to_string(), rgb.2.to_string()]
+                })
+            })
+            // Combine the numbers in a row to a string with lines of length at most 70
+            .map(|row| {
+                const MAX_LENGTH: usize = 70;
+                let mut result = Vec::new();
+                let mut current_line = String::new();
+
+                for number in row {
+                    if current_line.is_empty() {
+                        assert!(number.len() < MAX_LENGTH);
+                        current_line.push_str(&number);
+                    } else if current_line.len() + number.len() + 2 <= 70 {
+                        // We can only add a number if the current length + space +
+                        // the number + \n are at most MAX_LENGTH characters.
+                        current_line.push(' ');
+                        current_line.push_str(&number);
+                    } else {
+                        result.push(current_line.clone());
+                        current_line.clear();
+                        assert!(number.len() < MAX_LENGTH);
+                        current_line.push_str(&number);
+                    }
+                }
+
+                if !current_line.is_empty() {
+                    result.push(current_line);
+                }
+
+                result.join("\n")
+            })
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        header + "\n" + &data + "\n"
     }
 }
 
