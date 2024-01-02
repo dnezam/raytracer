@@ -2,11 +2,21 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 use crate::utils;
 
+/// Used to encapsulate position, direction and distance.
+///
+/// We will use a left-handed coordinate system. This is reflected by the z-axis
+/// pointing *away* from us.
 #[derive(Debug, Copy, Clone)]
 pub struct Tuple {
+    /// The x-axis points to the right.
     pub x: f64,
+    /// The y-axis points up.
     pub y: f64,
+    /// The z-axis points away from us.
     pub z: f64,
+    /// Determines whether the tuple is a point or vector.
+    ///
+    /// If w is 1, we have a point. If w is 0, we have a vector.
     pub w: f64,
 }
 
@@ -101,26 +111,32 @@ impl Div<f64> for Tuple {
 }
 
 impl Tuple {
+    /// Create a new tuple.
     pub fn new(x: f64, y: f64, z: f64, w: f64) -> Self {
         Tuple { x, y, z, w }
     }
 
+    /// Create a new point.
     pub fn point(x: f64, y: f64, z: f64) -> Self {
         Tuple { x, y, z, w: 1.0 }
     }
 
+    /// Create a new vector.
     pub fn vector(x: f64, y: f64, z: f64) -> Self {
         Tuple { x, y, z, w: 0.0 }
     }
 
+    /// Returns true if and only if this tuple is a point.
     pub fn is_point(self) -> bool {
         utils::eq(self.w, 1.0)
     }
 
+    /// Returns true if and only if this tuple is a vector.
     pub fn is_vector(self) -> bool {
         utils::eq(self.w, 0.0)
     }
 
+    /// Returns the magnitude (length).
     pub fn magnitude(self) -> f64 {
         let xx = self.x.powi(2);
         let yy = self.y.powi(2);
@@ -129,10 +145,18 @@ impl Tuple {
         (xx + yy + zz + ww).sqrt()
     }
 
+    /// Returns the normalized tuple.
     pub fn normalize(self) -> Self {
         self / self.magnitude()
     }
 
+    /// Returns the dot product.
+    ///
+    /// `dot` requires the arguments to be vectors.
+    /// Intuitively, the smaller the result, the larger the angle between the vectors.
+    ///
+    /// # Panics
+    /// `dot` will panic if `self` or `other` are not vectors.
     pub fn dot(self, other: Self) -> f64 {
         // Only implement dot product for vectors: Here we deviate from the book,
         // because the reasons of generalizing to all dimensions don't convince me.
@@ -143,8 +167,15 @@ impl Tuple {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
 
+    /// Returns the cross product.
+    ///
+    /// `cross` requires the arguments to be vectors, and returns a vector that is
+    /// perpendicular to both of the original vectors.
+    ///
+    /// # Panics
+    /// `cross` will panic if `self` or `other` are not vectors.
     pub fn cross(self, other: Self) -> Self {
-        // Only implement cross-product for vectors, not tuples: four-dimensional
+        // Only implement cross-product for vectors: four-dimensional
         // cross product is more complicated and not needed
         assert!(self.is_vector());
         assert!(other.is_vector());
