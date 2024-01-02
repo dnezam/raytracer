@@ -78,10 +78,10 @@ impl Mul<Tuple> for f64 {
 
     fn mul(self, rhs: Tuple) -> Self::Output {
         Self::Output {
-            x: rhs.x * self,
-            y: rhs.y * self,
-            z: rhs.z * self,
-            w: rhs.w * self,
+            x: self * rhs.x,
+            y: self * rhs.y,
+            z: self * rhs.z,
+            w: self * rhs.w,
         }
     }
 }
@@ -262,31 +262,31 @@ mod tests {
     #[test]
     fn magnitude_1() {
         let v = Tuple::vector(1.0, 0.0, 0.0);
-        assert_eq!(v.magnitude(), 1.0);
+        assert!(utils::eq(v.magnitude(), 1.0));
     }
 
     #[test]
     fn magnitude_2() {
         let v = Tuple::vector(0.0, 1.0, 0.0);
-        assert_eq!(v.magnitude(), 1.0);
+        assert!(utils::eq(v.magnitude(), 1.0));
     }
 
     #[test]
     fn magnitude_3() {
         let v = Tuple::vector(0.0, 0.0, 1.0);
-        assert_eq!(v.magnitude(), 1.0);
+        assert!(utils::eq(v.magnitude(), 1.0));
     }
 
     #[test]
     fn magnitude_4() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
-        assert_eq!(v.magnitude(), f64::sqrt(14.0));
+        assert!(utils::eq(v.magnitude(), f64::sqrt(14.0)));
     }
 
     #[test]
     fn magnitude_5() {
         let v = Tuple::vector(-1.0, -2.0, -3.0);
-        assert_eq!(v.magnitude(), f64::sqrt(14.0));
+        assert!(utils::eq(v.magnitude(), f64::sqrt(14.0)));
     }
 
     #[test]
@@ -306,14 +306,14 @@ mod tests {
     fn normalize_magnitude() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
         let norm = v.normalize();
-        assert_eq!(norm.magnitude(), 1.0);
+        assert!(utils::eq(norm.magnitude(), 1.0));
     }
 
     #[test]
     fn dot_vectors() {
         let a = Tuple::vector(1.0, 2.0, 3.0);
         let b = Tuple::vector(2.0, 3.0, 4.0);
-        assert_eq!(a.dot(b), 20.0);
+        assert!(utils::eq(a.dot(b), 20.0));
     }
 
     #[test]
