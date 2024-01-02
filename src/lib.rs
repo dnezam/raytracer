@@ -6,4 +6,6 @@ mod color;
 mod tuple;
 mod utils;
 
+pub use canvas::Canvas;
+pub use color::Color;
 pub use tuple::Tuple;

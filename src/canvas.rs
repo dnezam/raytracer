@@ -1,6 +1,8 @@
 // TODO Check if we can loops more idiomatic/"abstract"
 use std::{
+    fs, io,
     ops::{Index, IndexMut},
+    path::Path,
     slice::Chunks,
 };
 
@@ -116,6 +118,12 @@ impl Canvas {
             .join("\n");
 
         header + "\n" + &data + "\n"
+    }
+
+    /// Saves the canvas to a file.
+    pub fn save(&self, path: &Path) -> io::Result<()> {
+        let ppm = self.to_ppm();
+        fs::write(path, ppm)
     }
 }
 

@@ -1,19 +1,32 @@
-use raytracer::Tuple;
+use std::path::Path;
+
+use raytracer::{Canvas, Color, Tuple};
 
 fn main() {
+    let width = 950;
+    let height = 550;
+    let mut c = Canvas::new(width, height);
     let mut p = Projectile {
-        position: Tuple::point(0.0, 1.0, 0.0),
-        velocity: Tuple::vector(1.0, 1.0, 0.0).normalize(),
+        position: Tuple::point(0.0, 0.5, 0.0),
+        velocity: Tuple::vector(1.0, 1.8, 0.0).normalize() * 11.5,
     };
     let e = Environment {
-        gravity: Tuple::vector(0.0, -0.9, 0.0),
+        gravity: Tuple::vector(0.0, -0.1, 0.0),
         wind: Tuple::vector(-0.01, 0.0, 0.0),
     };
 
     while p.position.y > 0.0 {
+        let x = p.position.x.round() as usize;
+        let y = p.position.y.round() as usize;
         println!("{:?}", p);
+        if x < width && 0 < y && y < height {
+            c[[x, height - y]] = Color::new(1.0, 0.0, 0.0);
+        }
         p = tick(e, p);
     }
+
+    c.save(Path::new("./projectile.ppm"))
+        .expect("Unable to save canvas.")
 }
 
 #[derive(Debug, Copy, Clone)]
