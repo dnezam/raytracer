@@ -94,7 +94,7 @@ impl Canvas {
                 for number in row {
                     if current_line.is_empty() {
                         current_line.push_str(&number);
-                    } else if current_line.len() + number.len() + 2 <= 70 {
+                    } else if current_line.len() + number.len() + 2 <= MAX_LENGTH {
                         // We can only add a number if the current length + space +
                         // the number + \n are at most MAX_LENGTH characters.
                         current_line.push(' ');
