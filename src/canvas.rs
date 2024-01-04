@@ -93,7 +93,6 @@ impl Canvas {
 
                 for number in row {
                     if current_line.is_empty() {
-                        assert!(number.len() < MAX_LENGTH);
                         current_line.push_str(&number);
                     } else if current_line.len() + number.len() + 2 <= 70 {
                         // We can only add a number if the current length + space +
@@ -103,7 +102,6 @@ impl Canvas {
                     } else {
                         result.push(current_line.clone());
                         current_line.clear();
-                        assert!(number.len() < MAX_LENGTH);
                         current_line.push_str(&number);
                     }
                 }
