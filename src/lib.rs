@@ -1,7 +1,7 @@
 //! Raytracer based on the book "The Ray Tracer Challenge" by Jamis Buck.
 #![deny(missing_docs)]
 
-// TODO Do proper error handling
+// TODO Replace as with (try_)into
 
 mod canvas;
 mod color;

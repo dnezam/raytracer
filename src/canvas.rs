@@ -1,4 +1,3 @@
-// TODO Check if we can loops more idiomatic/"abstract"
 use std::{
     fs, io,
     ops::{Index, IndexMut},
