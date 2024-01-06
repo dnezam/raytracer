@@ -11,4 +11,5 @@ mod utils;
 
 pub use canvas::Canvas;
 pub use color::Color;
+pub use matrix::Matrix;
 pub use tuple::Tuple;
