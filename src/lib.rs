@@ -12,5 +12,8 @@ mod utils;
 
 pub use canvas::Canvas;
 pub use color::Color;
+pub use errors::CanvasError;
+pub use errors::MatrixError;
+pub use errors::TupleError;
 pub use matrix::Matrix;
 pub use tuple::Tuple;

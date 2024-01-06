@@ -8,7 +8,8 @@ fn main() {
     let mut c = Canvas::new(width, height);
     let mut p = Projectile {
         position: Tuple::point(0.0, 0.5, 0.0),
-        velocity: Tuple::vector(1.0, 1.8, 0.0).normalize() * 11.5,
+        // Normalizing a vector returns a vector.
+        velocity: Tuple::vector(1.0, 1.8, 0.0).normalize().unwrap() * 11.5,
     };
     let e = Environment {
         gravity: Tuple::vector(0.0, -0.1, 0.0),
@@ -18,10 +19,12 @@ fn main() {
     while p.position.y > 0.0 {
         let x = p.position.x.round() as usize;
         let y = p.position.y.round() as usize;
-        println!("{:?}", p);
-        if x < width && 0 < y && y < height {
-            c[[x, height - y]] = Color::new(1.0, 0.0, 0.0);
-        }
+
+        let Ok(canvas_position) = c.get_mut(x, height - y) else {
+            continue;
+        };
+        *canvas_position = Color::new(1.0, 0.0, 0.0);
+
         p = tick(e, p);
     }
 

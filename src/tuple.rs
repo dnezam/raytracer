@@ -1,6 +1,8 @@
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-use crate::utils;
+use crate::{errors::TupleError, utils};
+
+type Result<T> = std::result::Result<T, TupleError>;
 
 /// Used to encapsulate position, direction and distance.
 ///
@@ -144,53 +146,65 @@ impl Tuple {
     }
 
     /// Returns the magnitude (length).
-    pub fn magnitude(self) -> f64 {
+    ///
+    /// # Returns
+    /// Returns `Ok(f64)` containing the magnitude if the tuple is a vector.
+    /// Returns `Err(TupleError::NotAVector)` if the tuple is not a vector.
+    pub fn magnitude(self) -> Result<f64> {
+        if !self.is_vector() {
+            return Err(TupleError::NotAVector);
+        }
+
+        // We now know that self is a vector, hence w must be 0 and we don't need
+        // to consider it in the calculation.
         let xx = self.x.powi(2);
         let yy = self.y.powi(2);
         let zz = self.z.powi(2);
-        let ww = self.w.powi(2);
-        (xx + yy + zz + ww).sqrt()
+        Ok((xx + yy + zz).sqrt())
     }
 
     /// Returns the normalized tuple.
-    pub fn normalize(self) -> Self {
-        self / self.magnitude()
+    ///
+    /// # Returns
+    /// Returns `Ok(Tuple)` containing the normalized vector if the tuple is a vector.
+    /// Returns `Err(TupleError::NotAVector)` if the tuple is not a vector.
+    pub fn normalize(self) -> Result<Self> {
+        Ok(self / self.magnitude()?)
     }
 
     /// Returns the dot product.
     ///
-    /// `dot` requires the arguments to be vectors.
     /// Intuitively, the smaller the result, the larger the angle between the vectors.
     ///
-    /// # Panics
-    /// `dot` will panic if `self` or `other` are not vectors.
-    pub fn dot(self, other: Self) -> f64 {
-        // Only implement dot product for vectors: Here we deviate from the book,
-        // because the reasons of generalizing to all dimensions don't convince me.
-        // Although it is possible that I'll consider the w coordinate in the future.
-        assert!(self.is_vector());
-        assert!(other.is_vector());
+    /// # Returns
+    /// Returns `Ok(Tuple)` containing the dot product if both tuples are vectors.
+    /// Returns `Err(TupleError::NotAVector)` if at least one tuple is not a vector.
+    pub fn dot(self, other: Self) -> Result<f64> {
+        if !self.is_vector() || !other.is_vector() {
+            return Err(TupleError::NotAVector);
+        }
 
-        self.x * other.x + self.y * other.y + self.z * other.z
+        Ok(self.x * other.x + self.y * other.y + self.z * other.z)
     }
 
     /// Returns the cross product.
     ///
-    /// `cross` requires the arguments to be vectors, and returns a vector that is
-    /// perpendicular to both of the original vectors.
+    /// The cross produt is a vector that is perpendicular to both of the original vectors.
     ///
-    /// # Panics
-    /// `cross` will panic if `self` or `other` are not vectors.
-    pub fn cross(self, other: Self) -> Self {
+    /// # Returns
+    /// Returns `Ok(Tuple)` containing the cross product if both tuples are vectors.
+    /// Returns `Err(TupleError::NotAVector)` if at least one tuple is not a vector.
+    pub fn cross(self, other: Self) -> Result<Self> {
         // Only implement cross-product for vectors: four-dimensional
         // cross product is more complicated and not needed
-        assert!(self.is_vector());
-        assert!(other.is_vector());
+        if !self.is_vector() || !other.is_vector() {
+            return Err(TupleError::NotAVector);
+        }
 
         let x = self.y * other.z - self.z * other.y;
         let y = self.z * other.x - self.x * other.z;
         let z = self.x * other.y - self.y * other.x;
-        Tuple::vector(x, y, z)
+        Ok(Tuple::vector(x, y, z))
     }
 }
 
@@ -298,67 +312,124 @@ mod tests {
     }
 
     #[test]
+    fn magnitude_point() {
+        let p = Tuple::point(1.0, 0.0, 0.0);
+        assert_eq!(p.magnitude().unwrap_err(), TupleError::NotAVector);
+    }
+
+    #[test]
     fn magnitude_1() {
         let v = Tuple::vector(1.0, 0.0, 0.0);
-        assert!(utils::eq(v.magnitude(), 1.0));
+        assert!(utils::eq(v.magnitude().unwrap(), 1.0));
     }
 
     #[test]
     fn magnitude_2() {
         let v = Tuple::vector(0.0, 1.0, 0.0);
-        assert!(utils::eq(v.magnitude(), 1.0));
+        assert!(utils::eq(v.magnitude().unwrap(), 1.0));
     }
 
     #[test]
     fn magnitude_3() {
         let v = Tuple::vector(0.0, 0.0, 1.0);
-        assert!(utils::eq(v.magnitude(), 1.0));
+        assert!(utils::eq(v.magnitude().unwrap(), 1.0));
     }
 
     #[test]
     fn magnitude_4() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
-        assert!(utils::eq(v.magnitude(), f64::sqrt(14.0)));
+        assert!(utils::eq(v.magnitude().unwrap(), f64::sqrt(14.0)));
     }
 
     #[test]
     fn magnitude_5() {
         let v = Tuple::vector(-1.0, -2.0, -3.0);
-        assert!(utils::eq(v.magnitude(), f64::sqrt(14.0)));
+        assert!(utils::eq(v.magnitude().unwrap(), f64::sqrt(14.0)));
+    }
+
+    #[test]
+    fn normalize_point() {
+        let p = Tuple::point(4.0, 0.0, 0.0);
+        assert_eq!(p.normalize().unwrap_err(), TupleError::NotAVector);
     }
 
     #[test]
     fn normalize_1() {
         let v = Tuple::vector(4.0, 0.0, 0.0);
-        assert_eq!(v.normalize(), Tuple::vector(1.0, 0.0, 0.0));
+        assert_eq!(v.normalize().unwrap(), Tuple::vector(1.0, 0.0, 0.0));
     }
 
     #[test]
     fn normalize_2() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
         // vector(1/√14, 2/√14, 3/√14)​
-        assert_eq!(v.normalize(), Tuple::vector(0.26726, 0.53452, 0.80178));
+        assert_eq!(
+            v.normalize().unwrap(),
+            Tuple::vector(0.26726, 0.53452, 0.80178)
+        );
     }
 
     #[test]
     fn normalize_magnitude() {
         let v = Tuple::vector(1.0, 2.0, 3.0);
-        let norm = v.normalize();
-        assert!(utils::eq(norm.magnitude(), 1.0));
+        let norm = v.normalize().unwrap();
+        assert!(utils::eq(norm.magnitude().unwrap(), 1.0));
+    }
+
+    #[test]
+    fn dot_vector_point() {
+        let a = Tuple::vector(1.0, 2.0, 3.0);
+        let b = Tuple::point(2.0, 3.0, 4.0);
+        assert_eq!(a.dot(b).unwrap_err(), TupleError::NotAVector);
+    }
+
+    #[test]
+    fn dot_point_vector() {
+        let a = Tuple::point(1.0, 2.0, 3.0);
+        let b = Tuple::vector(2.0, 3.0, 4.0);
+        assert_eq!(a.dot(b).unwrap_err(), TupleError::NotAVector);
+    }
+
+    #[test]
+    fn dot_point_point() {
+        let a = Tuple::point(1.0, 2.0, 3.0);
+        let b = Tuple::point(2.0, 3.0, 4.0);
+        assert_eq!(a.dot(b).unwrap_err(), TupleError::NotAVector);
     }
 
     #[test]
     fn dot_vectors() {
         let a = Tuple::vector(1.0, 2.0, 3.0);
         let b = Tuple::vector(2.0, 3.0, 4.0);
-        assert!(utils::eq(a.dot(b), 20.0));
+        assert!(utils::eq(a.dot(b).unwrap(), 20.0));
+    }
+
+    #[test]
+    fn cross_vector_point() {
+        let a = Tuple::vector(1.0, 2.0, 3.0);
+        let b = Tuple::point(2.0, 3.0, 4.0);
+        assert_eq!(a.cross(b).unwrap_err(), TupleError::NotAVector);
+    }
+
+    #[test]
+    fn cross_point_vector() {
+        let a = Tuple::point(1.0, 2.0, 3.0);
+        let b = Tuple::vector(2.0, 3.0, 4.0);
+        assert_eq!(a.cross(b).unwrap_err(), TupleError::NotAVector);
+    }
+
+    #[test]
+    fn cross_point_point() {
+        let a = Tuple::point(1.0, 2.0, 3.0);
+        let b = Tuple::point(2.0, 3.0, 4.0);
+        assert_eq!(a.cross(b).unwrap_err(), TupleError::NotAVector);
     }
 
     #[test]
     fn cross_vectors() {
         let a = Tuple::vector(1.0, 2.0, 3.0);
         let b = Tuple::vector(2.0, 3.0, 4.0);
-        assert_eq!(a.cross(b), Tuple::vector(-1.0, 2.0, -1.0));
-        assert_eq!(b.cross(a), Tuple::vector(1.0, -2.0, 1.0));
+        assert_eq!(a.cross(b).unwrap(), Tuple::vector(-1.0, 2.0, -1.0));
+        assert_eq!(b.cross(a).unwrap(), Tuple::vector(1.0, -2.0, 1.0));
     }
 }

@@ -212,6 +212,10 @@ impl Matrix<4> {
     }
 
     /// Returns the inverse.
+    ///
+    /// # Returns
+    /// Returns `Ok(Matrix)` containing the inverse of the given matrix if it is invertible.
+    /// Returns `Err(MatrixError::NotInvertible)` if the matrix is not invertible.
     pub fn inverse(self) -> Result<Self> {
         if !self.invertible() {
             return Err(MatrixError::NotInvertible);

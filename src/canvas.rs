@@ -6,7 +6,9 @@ use std::{
     slice::Chunks,
 };
 
-use crate::color::Color;
+use crate::{color::Color, errors::CanvasError};
+
+type Result<T> = std::result::Result<T, CanvasError>;
 
 #[derive(PartialEq)]
 /// A rectangular grid of pixels.
@@ -71,6 +73,32 @@ impl Canvas {
     /// Returns a mutable iterator over all pixels.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Color> {
         self.pixels.iter_mut()
+    }
+
+    /// Returns a reference to the color at (`x`, `y`).
+    ///
+    /// # Returns
+    /// Returns `Ok(&Color)` containing a reference to the color at (`x`, `y`)
+    /// if `x` and `y` are valid indices.
+    /// Returns `Err(CanvasError::OutOfBounds)` if `x` or `y` is out-of-bounds.
+    pub fn get(&self, x: usize, y: usize) -> Result<&Color> {
+        if x >= self.width || y >= self.height {
+            return Err(CanvasError::OutOfBounds);
+        }
+        Ok(&self[[x, y]])
+    }
+
+    /// Returns a mutable reference to the color at (`x`, `y`).
+    ///
+    /// # Returns
+    /// Returns `Ok(&Color)` containing a mutable reference to the color at (`x`, `y`)
+    /// if `x` and `y` are valid indices.
+    /// Returns `Err(CanvasError::OutOfBounds)` if `x` or `y` are out-of-bounds.
+    pub fn get_mut(&mut self, x: usize, y: usize) -> Result<&mut Color> {
+        if x >= self.width || y >= self.height {
+            return Err(CanvasError::OutOfBounds);
+        }
+        Ok(&mut self[[x, y]])
     }
 
     /// Converts the canvas into the PPM format.
@@ -145,6 +173,64 @@ mod tests {
         let red = Color::new(1.0, 0.0, 0.0);
         c[[2, 3]] = red;
         assert_eq!(c[[2, 3]], red);
+    }
+
+    #[test]
+    fn get() {
+        let mut c = Canvas::new(10, 20);
+        let red = Color::new(1.0, 0.0, 0.0);
+        c[[2, 3]] = red;
+        assert_eq!(*c.get(2, 3).unwrap(), red);
+    }
+
+    #[test]
+    fn get_x_out_of_bounds() {
+        let c = Canvas::new(10, 20);
+        assert_eq!(c.get(10, 3).unwrap_err(), CanvasError::OutOfBounds);
+        assert_eq!(c.get(15, 3).unwrap_err(), CanvasError::OutOfBounds);
+    }
+
+    #[test]
+    fn get_y_out_of_bounds() {
+        let c = Canvas::new(10, 20);
+        assert_eq!(c.get(2, 20).unwrap_err(), CanvasError::OutOfBounds);
+        assert_eq!(c.get(2, 25).unwrap_err(), CanvasError::OutOfBounds);
+    }
+
+    #[test]
+    fn get_x_and_y_out_of_bounds() {
+        let c = Canvas::new(10, 20);
+        assert_eq!(c.get(10, 20).unwrap_err(), CanvasError::OutOfBounds);
+        assert_eq!(c.get(15, 25).unwrap_err(), CanvasError::OutOfBounds);
+    }
+
+    #[test]
+    fn get_mut() {
+        let mut c = Canvas::new(10, 20);
+        let red = Color::new(1.0, 0.0, 0.0);
+        *c.get_mut(2, 3).unwrap() = red;
+        assert_eq!(c[[2, 3]], red);
+    }
+
+    #[test]
+    fn get_mut_x_out_of_bounds() {
+        let mut c = Canvas::new(10, 20);
+        assert_eq!(c.get_mut(10, 3).unwrap_err(), CanvasError::OutOfBounds);
+        assert_eq!(c.get_mut(15, 3).unwrap_err(), CanvasError::OutOfBounds);
+    }
+
+    #[test]
+    fn get_mut_y_out_of_bounds() {
+        let mut c = Canvas::new(10, 20);
+        assert_eq!(c.get_mut(2, 20).unwrap_err(), CanvasError::OutOfBounds);
+        assert_eq!(c.get_mut(2, 25).unwrap_err(), CanvasError::OutOfBounds);
+    }
+
+    #[test]
+    fn get_mut_x_and_y_out_of_bounds() {
+        let mut c = Canvas::new(10, 20);
+        assert_eq!(c.get_mut(10, 20).unwrap_err(), CanvasError::OutOfBounds);
+        assert_eq!(c.get_mut(15, 25).unwrap_err(), CanvasError::OutOfBounds);
     }
 
     #[test]
