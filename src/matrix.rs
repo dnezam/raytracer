@@ -1,7 +1,9 @@
-use crate::Tuple;
+use crate::{errors::MatrixError, Tuple};
 use std::ops::{Index, IndexMut, Mul};
 
 use crate::utils;
+
+type Result<T> = std::result::Result<T, MatrixError>;
 
 /// An N x N matrix.
 #[derive(Debug, Copy, Clone)]
@@ -77,10 +79,11 @@ impl Matrix<3> {
     fn submatrix(self, row: usize, column: usize) -> Matrix<2> {
         // Cannot be implemented more generically, as we cannot return Matrix<N-1>
         // (no const operations allowed)
-        let mut submatrix = Matrix::<2>::default();
 
-        // Assert that row and column are in-bounds
+        // submatrix is a private function; hence, if this assert fires we made a mistake somewhere.
         assert!(row < 3 && column < 3);
+
+        let mut submatrix = Matrix::<2>::default();
 
         for (sub_i, i) in (0..3).filter(|&x| x != row).enumerate() {
             for (sub_j, j) in (0..3).filter(|&x| x != column).enumerate() {
@@ -168,10 +171,11 @@ impl Matrix<4> {
     fn submatrix(self, row: usize, column: usize) -> Matrix<3> {
         // Cannot be implemented more generically, as we cannot return Matrix<N-1>
         // (no const operations allowed)
-        let mut submatrix = Matrix::<3>::default();
 
-        // Assert that row and column are in-bounds
+        // submatrix is a private function; hence, if this assert fires we made a mistake somewhere.
         assert!(row < 4 && column < 4);
+
+        let mut submatrix = Matrix::<3>::default();
 
         for (sub_i, i) in (0..4).filter(|&x| x != row).enumerate() {
             for (sub_j, j) in (0..4).filter(|&x| x != column).enumerate() {
@@ -202,15 +206,16 @@ impl Matrix<4> {
         (0..4).map(|j| self[[0, j]] * self.cofactor(0, j)).sum()
     }
 
-    /// Returns whether a function is invertible.
-    // TODO Instead of panicking in inverse, remove invertible and make inverse return a result type
+    /// Returns whether the matrix is invertible.
     pub fn invertible(self) -> bool {
         self.determinant() != 0.0
     }
 
     /// Returns the inverse.
-    pub fn inverse(self) -> Self {
-        assert!(self.invertible());
+    pub fn inverse(self) -> Result<Self> {
+        if !self.invertible() {
+            return Err(MatrixError::NotInvertible);
+        }
 
         let mut inverse = Self::default();
 
@@ -221,7 +226,7 @@ impl Matrix<4> {
             }
         }
 
-        inverse
+        Ok(inverse)
     }
 
     /// Returns a translation matrix.
@@ -571,6 +576,19 @@ mod tests {
     }
 
     #[test]
+    fn not_invertible_4x4() {
+        // Last row is a duplicate
+        let matrix = Matrix::<4>::new([
+            [6.0, 4.0, 4.0, 4.0],
+            [5.0, 5.0, 7.0, 6.0],
+            [4.0, -9.0, 3.0, -7.0],
+            [4.0, -9.0, 3.0, -7.0],
+        ]);
+
+        assert_eq!(matrix.inverse().unwrap_err(), MatrixError::NotInvertible)
+    }
+
+    #[test]
     fn invertible_4x4() {
         let matrix = Matrix::<4>::new([
             [6.0, 4.0, 4.0, 4.0],
@@ -604,7 +622,7 @@ mod tests {
             [7.0, 7.0, -6.0, -7.0],
             [1.0, -3.0, 7.0, 4.0],
         ]);
-        let inverse = matrix.inverse();
+        let inverse = matrix.inverse().unwrap();
 
         let expected_inverse = Matrix::<4>::new([
             [0.21805, 0.45113, 0.24060, -0.04511],
@@ -629,7 +647,7 @@ mod tests {
             [-6.0, 0.0, 9.0, 6.0],
             [-3.0, 0.0, -9.0, -4.0],
         ]);
-        let inverse = matrix.inverse();
+        let inverse = matrix.inverse().unwrap();
 
         let expected_inverse = Matrix::<4>::new([
             [-0.15385, -0.15385, -0.28205, -0.53846],
@@ -648,7 +666,7 @@ mod tests {
             [-4.0, 9.0, 6.0, 4.0],
             [-7.0, 6.0, 6.0, 2.0],
         ]);
-        let inverse = matrix.inverse();
+        let inverse = matrix.inverse().unwrap();
 
         let expected_inverse = Matrix::<4>::new([
             [-0.04074, -0.07778, 0.14444, -0.22222],
@@ -675,7 +693,7 @@ mod tests {
         ]);
 
         let product = matrix1 * matrix2;
-        assert_eq!(product * matrix2.inverse(), matrix1);
+        assert_eq!(product * matrix2.inverse().unwrap(), matrix1);
     }
 
     #[test]
@@ -688,7 +706,7 @@ mod tests {
     #[test]
     fn multiply_by_inverse_translation_4x4() {
         let transform = Matrix::<4>::translation(5.0, -3.0, 2.0);
-        let inv = transform.inverse();
+        let inv = transform.inverse().unwrap();
         let p = Tuple::point(-3.0, 4.0, 5.0);
         assert_eq!(inv * p, Tuple::point(-8.0, 7.0, 3.0));
     }
@@ -725,7 +743,7 @@ mod tests {
     #[test]
     fn inverse_scaling() {
         let transform = Matrix::<4>::scaling(2.0, 3.0, 4.0);
-        let inv = transform.inverse();
+        let inv = transform.inverse().unwrap();
         let v = Tuple::vector(-4.0, 6.0, 8.0);
         assert_eq!(inv * v, Tuple::vector(-2.0, 2.0, 2.0));
     }
@@ -762,7 +780,7 @@ mod tests {
     fn inverse_rotation_x() {
         let p = Tuple::point(0.0, 1.0, 0.0);
         let half_quarter = Matrix::<4>::rotation_x(PI / 4.0);
-        let inv = half_quarter.inverse();
+        let inv = half_quarter.inverse().unwrap();
         assert_eq!(
             inv * p,
             Tuple::point(0.0, (2.0_f64).sqrt() / 2.0, -(2.0_f64).sqrt() / 2.0)

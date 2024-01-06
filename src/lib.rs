@@ -5,6 +5,7 @@
 
 mod canvas;
 mod color;
+mod errors;
 mod matrix;
 mod tuple;
 mod utils;

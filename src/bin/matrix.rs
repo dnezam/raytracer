@@ -12,11 +12,11 @@ fn main() {
         [-4.0, 4.0, 4.0, 1.0],
         [-6.0, 5.0, -1.0, 1.0],
     ]);
-    println!("{:?}", matrix1 * matrix1.inverse());
+    println!("{:?}", matrix1 * matrix1.inverse().unwrap());
     println!();
 
     println!("Transpose of inverse");
-    println!("{:?}", matrix1.inverse().transpose());
+    println!("{:?}", matrix1.inverse().unwrap().transpose());
     println!();
     println!("Inverse of Transpose");
     println!("{:?}", matrix1.transpose().inverse());
