@@ -18,3 +18,12 @@ pub enum TupleError {
     /// Indicates that a vector was expected, but not passed.
     NotAVector,
 }
+
+/// An error type for ray operations.
+#[derive(Debug, PartialEq)]
+pub enum RayError {
+    /// Indicates that a point was expected, but not passed.
+    NotAPoint,
+    /// Indicates that a vector was expected, but not passed.
+    NotAVector,
+}

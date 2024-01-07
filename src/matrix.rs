@@ -1,4 +1,4 @@
-use crate::{errors::MatrixError, Tuple};
+use crate::{errors::MatrixError, tuple::Tuple};
 use std::ops::{Index, IndexMut, Mul};
 
 use crate::utils;
