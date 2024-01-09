@@ -4,6 +4,7 @@
 mod canvas;
 mod color;
 mod errors;
+mod intersection;
 mod matrix;
 mod ray;
 mod sphere;

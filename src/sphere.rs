@@ -1,8 +1,17 @@
-use crate::{ray::Ray, tuple::Tuple, utils};
+use crate::intersection::{Intersection, Intersections};
+use crate::utils::{self, Object};
+use crate::{ray::Ray, tuple::Tuple};
 
 /// Represents a sphere located at the (world) origin.
+#[derive(Debug, Copy, Clone)]
 pub struct Sphere {
     id: usize,
+}
+
+impl PartialEq for Sphere {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 impl Sphere {
@@ -14,13 +23,7 @@ impl Sphere {
     }
 
     /// Returns the t values where the ray with the sphere.
-    ///
-    /// # Returns
-    /// Returns Some((f64, f64)) containing the t values if the ray intersects the
-    /// sphere in 1 or 2 points. The t values are sorted in increasing order. If the
-    /// sphere is intersected in one point only, the same point is returned twice.
-    /// Returns None if the ray does not intersect the sphere.
-    pub fn intersect(self, ray: Ray) -> Option<(f64, f64)> {
+    pub fn intersect(self, ray: Ray) -> Intersections {
         // Vector from sphere's center to the ray origin: Sphere is located at world origin
         let sphere_to_ray = ray.origin() - Tuple::point(0.0, 0.0, 0.0);
 
@@ -33,13 +36,17 @@ impl Sphere {
 
         let discriminant = b.powi(2) - 4.0 * a * c;
         if discriminant < 0.0 {
-            return None;
+            return Intersections::empty();
         }
 
         let t1 = (-b - discriminant.sqrt()) / (2.0 * a);
         let t2 = (-b + discriminant.sqrt()) / (2.0 * a);
 
-        Some((t1, t2))
+        let i1 = Intersection::new(t1, Object::Sphere(self));
+        let i2 = Intersection::new(t2, Object::Sphere(self));
+
+        // (Hopefully) t1 and t2 are both numbers, hence this unwrap should always succeed.
+        Intersections::new(&[i1, i2]).unwrap()
     }
 }
 
@@ -51,46 +58,61 @@ mod tests {
     fn intersect_at_two_points() {
         let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0)).unwrap();
         let sphere = Sphere::new();
-        let (xs0, xs1) = sphere.intersect(r).unwrap();
+        let xs = sphere.intersect(r);
 
-        assert_eq!(xs0, 4.0);
-        assert_eq!(xs1, 6.0);
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].t(), 4.0);
+        assert_eq!(xs[1].t(), 6.0);
     }
 
     #[test]
     fn intersect_tangent() {
         let r = Ray::new(Tuple::point(0.0, 1.0, -5.0), Tuple::vector(0.0, 0.0, 1.0)).unwrap();
         let sphere = Sphere::new();
-        let (xs0, xs1) = sphere.intersect(r).unwrap();
+        let xs = sphere.intersect(r);
 
-        assert_eq!(xs0, 5.0);
-        assert_eq!(xs1, 5.0);
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].t(), 5.0);
+        assert_eq!(xs[1].t(), 5.0);
     }
 
     #[test]
     fn intersect_miss() {
         let r = Ray::new(Tuple::point(0.0, 2.0, -5.0), Tuple::vector(0.0, 0.0, 1.0)).unwrap();
         let sphere = Sphere::new();
-        assert!(sphere.intersect(r).is_none());
+        assert!(sphere.intersect(r).is_empty());
     }
 
     #[test]
     fn intersect_ray_inside() {
         let r = Ray::new(Tuple::point(0.0, 0.0, 0.0), Tuple::vector(0.0, 0.0, 1.0)).unwrap();
         let sphere = Sphere::new();
-        let (xs0, xs1) = sphere.intersect(r).unwrap();
+        let xs = sphere.intersect(r);
 
-        assert_eq!(xs0, -1.0);
-        assert_eq!(xs1, 1.0);
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].t(), -1.0);
+        assert_eq!(xs[1].t(), 1.0);
     }
 
     #[test]
     fn intersect_sphere_behind_ray() {
         let r = Ray::new(Tuple::point(0.0, 0.0, 5.0), Tuple::vector(0.0, 0.0, 1.0)).unwrap();
         let sphere = Sphere::new();
-        let (xs0, xs1) = sphere.intersect(r).unwrap();
+        let xs = sphere.intersect(r);
 
-        assert_eq!(xs0, -6.0);
-        assert_eq!(xs1, -4.0);
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].t(), -6.0);
+        assert_eq!(xs[1].t(), -4.0);
+    }
+
+    #[test]
+    fn intersect_sets_intersection_object() {
+        let r = Ray::new(Tuple::point(0.0, 0.0, -5.0), Tuple::vector(0.0, 0.0, 1.0)).unwrap();
+        let sphere = Sphere::new();
+        let xs = sphere.intersect(r);
+
+        assert_eq!(xs.len(), 2);
+        assert_eq!(xs[0].object(), Object::Sphere(sphere));
+        assert_eq!(xs[1].object(), Object::Sphere(sphere));
     }
 }
