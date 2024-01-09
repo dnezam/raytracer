@@ -35,6 +35,7 @@ impl Intersection {
 /// Represents a list of intersections.
 #[derive(PartialEq, Debug)]
 pub struct Intersections {
+    // Invariant: intersection.t() sorted in increasing order.
     elements: Vec<Intersection>,
 }
 
@@ -81,6 +82,18 @@ impl Intersections {
     /// Returns whether the list of intersections is empty.
     pub fn is_empty(&self) -> bool {
         self.elements.len() == 0
+    }
+
+    /// Returns the visible intersection (hit).
+    ///
+    /// # Returns
+    /// Returns Some(Intersection) containing the intersection with the smallest,
+    /// non-negative distance.
+    /// Returns None if no visible intersection exists (all distances are negative).
+    pub fn hit(&self) -> Option<&Intersection> {
+        self.elements
+            .iter()
+            .find(|intersection| intersection.t() >= 0.0)
     }
 }
 
@@ -135,7 +148,7 @@ mod tests {
         let xs = Intersections::new(&[i2, i1]).unwrap();
         let hit = xs.hit().unwrap();
 
-        assert_eq!(hit, i1);
+        assert_eq!(*hit, i1);
     }
 
     #[test]
@@ -146,7 +159,7 @@ mod tests {
         let xs = Intersections::new(&[i2, i1]).unwrap();
         let hit = xs.hit().unwrap();
 
-        assert_eq!(hit, i2);
+        assert_eq!(*hit, i2);
     }
 
     #[test]
@@ -169,6 +182,6 @@ mod tests {
         let xs = Intersections::new(&[i1, i2, i3, i4]).unwrap();
         let hit = xs.hit().unwrap();
 
-        assert_eq!(hit, i4);
+        assert_eq!(*hit, i4);
     }
 }
