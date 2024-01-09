@@ -1,4 +1,4 @@
-use crate::{errors::RayError, tuple::Tuple};
+use crate::{errors::RayError, tuple::Tuple, Matrix};
 
 type Result<T> = std::result::Result<T, RayError>;
 
@@ -42,10 +42,20 @@ impl Ray {
     pub fn position(self, t: f64) -> Tuple {
         self.origin + self.direction * t
     }
+
+    /// Returns a new ray by applying the transformation to the current ray.
+    pub fn transform(self, matrix: Matrix<4>) -> Self {
+        Self {
+            origin: matrix * self.origin,
+            direction: matrix * self.direction,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::Matrix;
+
     use super::*;
 
     #[test]
@@ -84,5 +94,25 @@ mod tests {
         assert_eq!(r.position(1.0), Tuple::point(3.0, 3.0, 4.0));
         assert_eq!(r.position(-1.0), Tuple::point(1.0, 3.0, 4.0));
         assert_eq!(r.position(2.5), Tuple::point(4.5, 3.0, 4.0));
+    }
+
+    #[test]
+    fn translating() {
+        let r = Ray::new(Tuple::point(1.0, 2.0, 3.0), Tuple::vector(0.0, 1.0, 0.0)).unwrap();
+        let m = Matrix::<4>::translation(3.0, 4.0, 5.0);
+        let r2 = r.transform(m);
+
+        assert_eq!(r2.origin(), Tuple::point(4.0, 6.0, 8.0));
+        assert_eq!(r2.direction(), Tuple::vector(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn scaling() {
+        let r = Ray::new(Tuple::point(1.0, 2.0, 3.0), Tuple::vector(0.0, 1.0, 0.0)).unwrap();
+        let m = Matrix::<4>::scaling(2.0, 3.0, 4.0);
+        let r2 = r.transform(m);
+
+        assert_eq!(r2.origin(), Tuple::point(2.0, 6.0, 12.0));
+        assert_eq!(r2.direction(), Tuple::vector(0.0, 3.0, 0.0));
     }
 }
