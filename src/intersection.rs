@@ -123,6 +123,52 @@ mod tests {
         let s = Sphere::new();
         let i1 = Intersection::new(1.0, Object::Sphere(s));
         let xs = Intersections::new(&[i1]).unwrap();
+
         assert!(!xs.is_empty());
+    }
+
+    #[test]
+    fn hit_positive_intersections() {
+        let s = Sphere::new();
+        let i1 = Intersection::new(1.0, Object::Sphere(s));
+        let i2 = Intersection::new(2.0, Object::Sphere(s));
+        let xs = Intersections::new(&[i2, i1]).unwrap();
+        let hit = xs.hit().unwrap();
+
+        assert_eq!(hit, i1);
+    }
+
+    #[test]
+    fn hit_mixed_intersections() {
+        let s = Sphere::new();
+        let i1 = Intersection::new(-1.0, Object::Sphere(s));
+        let i2 = Intersection::new(1.0, Object::Sphere(s));
+        let xs = Intersections::new(&[i2, i1]).unwrap();
+        let hit = xs.hit().unwrap();
+
+        assert_eq!(hit, i2);
+    }
+
+    #[test]
+    fn hit_negative_intersections() {
+        let s = Sphere::new();
+        let i1 = Intersection::new(-2.0, Object::Sphere(s));
+        let i2 = Intersection::new(-1.0, Object::Sphere(s));
+        let xs = Intersections::new(&[i2, i1]).unwrap();
+
+        assert!(xs.hit().is_none());
+    }
+
+    #[test]
+    fn hit_mixed_intersections_random_ordor() {
+        let s = Sphere::new();
+        let i1 = Intersection::new(5.0, Object::Sphere(s));
+        let i2 = Intersection::new(7.0, Object::Sphere(s));
+        let i3 = Intersection::new(-3.0, Object::Sphere(s));
+        let i4 = Intersection::new(2.0, Object::Sphere(s));
+        let xs = Intersections::new(&[i1, i2, i3, i4]).unwrap();
+        let hit = xs.hit().unwrap();
+
+        assert_eq!(hit, i4);
     }
 }
