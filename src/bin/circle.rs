@@ -2,6 +2,7 @@ use std::path::Path;
 
 use raytracer::{Canvas, Color, Matrix, Ray, Sphere, Tuple};
 
+// Chapter 5: Putting It Together
 fn main() {
     // Set up canvas
     let canvas_size = 100;

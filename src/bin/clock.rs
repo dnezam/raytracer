@@ -2,6 +2,7 @@ use std::{f64::consts::PI, path::Path};
 
 use raytracer::{Canvas, Color, Matrix, Tuple};
 
+// Chapter 4: Putting It Together
 fn main() {
     let width = 300;
     let height = 300;

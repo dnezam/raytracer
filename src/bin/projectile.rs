@@ -2,6 +2,7 @@ use std::path::Path;
 
 use raytracer::{Canvas, Color, Tuple};
 
+// Chapter 2: Putting It Together
 fn main() {
     let width = 950;
     let height = 550;

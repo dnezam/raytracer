@@ -1,5 +1,6 @@
 use raytracer::{Matrix, Tuple};
 
+// Chapter 3: Putting It Together
 fn main() {
     println!("Inverted Identity");
     println!("{:?}", Matrix::<4>::IDENTITY.inverse());
