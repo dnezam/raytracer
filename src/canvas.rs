@@ -64,6 +64,14 @@ impl Canvas {
         self.pixels.iter()
     }
 
+    /// Returns an iterator over all pixels with their position as (x, y, &Color).
+    pub fn iter_with_pos(&self) -> impl Iterator<Item = (usize, usize, &Color)> {
+        self.pixels
+            .iter()
+            .enumerate()
+            .map(|(i, color)| (i - ((i / self.width) * self.width), i / self.width, color))
+    }
+
     /// Returns an iterator over the rows.
     pub fn rows(&self) -> Chunks<Color> {
         self.pixels.chunks(self.width)
@@ -72,6 +80,14 @@ impl Canvas {
     /// Returns a mutable iterator over all pixels.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut Color> {
         self.pixels.iter_mut()
+    }
+
+    /// Returns an mutable iterator over all pixels with their position as (x, y, &mut Color).
+    pub fn iter_mut_with_pos(&mut self) -> impl Iterator<Item = (usize, usize, &mut Color)> {
+        self.pixels
+            .iter_mut()
+            .enumerate()
+            .map(|(i, color)| (i - ((i / self.width) * self.width), i / self.width, color))
     }
 
     /// Returns a reference to the color at (`x`, `y`).
@@ -201,6 +217,36 @@ mod tests {
         let c = Canvas::new(10, 20);
         assert_eq!(c.get(10, 20).unwrap_err(), CanvasError::OutOfBounds);
         assert_eq!(c.get(15, 25).unwrap_err(), CanvasError::OutOfBounds);
+    }
+
+    #[test]
+    fn iter_with_pos() {
+        let width = 12;
+        let height = 13;
+        let c = Canvas::new(width, height);
+        let mut iter_with_pos = c.iter_with_pos();
+        for y in 0..height {
+            for x in 0..width {
+                let (actual_x, actual_y, _) = iter_with_pos.next().unwrap();
+                assert_eq!(actual_x, x);
+                assert_eq!(actual_y, y);
+            }
+        }
+    }
+
+    #[test]
+    fn iter_mut_with_pos() {
+        let width = 12;
+        let height = 13;
+        let mut c = Canvas::new(width, height);
+        let mut iter_mut_with_pos = c.iter_mut_with_pos();
+        for y in 0..height {
+            for x in 0..width {
+                let (actual_x, actual_y, _) = iter_mut_with_pos.next().unwrap();
+                assert_eq!(actual_x, x);
+                assert_eq!(actual_y, y);
+            }
+        }
     }
 
     #[test]
