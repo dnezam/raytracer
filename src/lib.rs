@@ -1,6 +1,9 @@
 //! Raytracer based on the book "The Ray Tracer Challenge" by Jamis Buck.
 #![deny(missing_docs)]
 
+// TODO Check if constants like sqrt(2)/2 are in our code and can be replaced
+// using the standard math library.
+
 mod canvas;
 mod color;
 mod errors;
