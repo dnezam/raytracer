@@ -1,15 +1,17 @@
 use std::path::Path;
 
-use raytracer::{Canvas, Color, Ray, Sphere, Tuple};
+use raytracer::{Canvas, Color, Matrix, Ray, Sphere, Tuple};
 
 // Chapter 5: Putting It Together (following hints)
 fn main() {
     // The key difference to circle.rs is that we will consider a wall that is not
     // set at z = 0.
-    let canvas_pixels = 300;
+    let canvas_pixels = 150;
     let mut canvas = Canvas::new(canvas_pixels, canvas_pixels);
     let red = Color::new(1.0, 0.0, 0.0);
-    let sphere = Sphere::new();
+    let mut sphere = Sphere::new();
+    let transform = Matrix::<4>::IDENTITY.scale(1.0, 0.5, 1.0);
+    sphere.set_transform(transform).unwrap();
 
     let wall_z = 10.0;
     let wall_size = 7.0;
@@ -41,5 +43,5 @@ fn main() {
         }
     }
 
-    canvas.save(Path::new("./circle_wall.ppm")).unwrap();
+    canvas.save(Path::new("./circle_shrink_y.ppm")).unwrap();
 }
