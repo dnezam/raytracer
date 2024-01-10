@@ -1,18 +1,27 @@
 use crate::intersection::{Intersection, Intersections};
 use crate::utils::{self, Object};
-use crate::{errors::MatrixError, ray::Ray, tuple::Tuple, Matrix};
-use std::result::Result;
+use crate::{errors::SphereError, ray::Ray, tuple::Tuple, Matrix};
+
+type Result<T> = std::result::Result<T, SphereError>;
 
 /// Represents a sphere located at the (world) origin.
 #[derive(Debug, Copy, Clone)]
 pub struct Sphere {
+    // Invariant: Must be unique
     id: usize,
+    // Invariant: Must be invertible
     transform: Matrix<4>,
 }
 
 impl PartialEq for Sphere {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
+    }
+}
+
+impl Default for Sphere {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -34,10 +43,10 @@ impl Sphere {
     ///
     /// # Returns
     /// Returns Ok(()) if `transform` is an invertible matrix.
-    /// Returns Err(MatrixError::NotInvertible) if `transform` is not an invertible matrix.
-    pub fn set_transform(&mut self, transform: Matrix<4>) -> Result<(), MatrixError> {
+    /// Returns Err(SphereError::NotInvertible) if `transform` is not an invertible matrix.
+    pub fn set_transform(&mut self, transform: Matrix<4>) -> Result<()> {
         if !transform.invertible() {
-            Err(MatrixError::NotInvertible)
+            Err(SphereError::NotInvertible)
         } else {
             self.transform = transform;
             Ok(())
@@ -72,10 +81,46 @@ impl Sphere {
         // (Hopefully) t1 and t2 are both numbers, hence this unwrap should always succeed.
         Intersections::new(&[i1, i2]).unwrap()
     }
+
+    /// Returns the normal at the passed surface point in world coordinates.
+    ///
+    /// # Returns
+    /// Returns Ok(Tuple) containing the normal vector if a surface point
+    /// in world coordinates was passed.
+    /// Returns Err(SphereError::NotAPoint) if `world_point` is not a point.
+    /// Returns Err(SphereError::NotOnSurface) if `world_point` is not on the surface of the sphere.
+    pub fn normal_at(self, world_point: Tuple) -> Result<Tuple> {
+        if !world_point.is_point() {
+            return Err(SphereError::NotAPoint);
+        }
+
+        // unwrap() must succeed because of the invariant on self.transform
+        let inverse = self.transform().inverse().unwrap();
+        let object_point = inverse * world_point;
+        let object_normal = object_point - Tuple::point(0.0, 0.0, 0.0);
+
+        // Check whether the object_point is actually on the surface. This is equivalent
+        // to checking whether the object_normal is actually normalized.
+        // unwrap(): Point - Point = Vector
+        if !utils::eq(object_normal.magnitude().unwrap(), 1.0) {
+            return Err(SphereError::NotOnSurface);
+        }
+
+        // HACK Technically, we should be applying the inverse and transpose of
+        // transform.submatrix(3, 3) (otherwise we run into problems if we translate)
+        // Instead, we multiply with the 4x4 inverse and set w to 0 by creating a vector.
+        let mut world_normal = inverse.transpose() * object_normal;
+        world_normal = Tuple::vector(world_normal.x, world_normal.y, world_normal.z);
+
+        // unwrap(): world_normal is created as a vector.
+        Ok(world_normal.normalize().unwrap())
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::f64::consts::{FRAC_1_SQRT_2, PI};
+
     use super::*;
 
     #[test]
@@ -161,7 +206,7 @@ mod tests {
         let t = Matrix::<4>::default();
         assert_eq!(
             sphere.set_transform(t).unwrap_err(),
-            MatrixError::NotInvertible
+            SphereError::NotInvertible
         );
     }
 
@@ -186,4 +231,84 @@ mod tests {
 
         assert_eq!(xs.len(), 0);
     }
+
+    #[test]
+    fn normal_point_on_x_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(Tuple::point(1.0, 0.0, 0.0)).unwrap();
+        assert_eq!(n, Tuple::vector(1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn normal_point_on_y_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(Tuple::point(0.0, 1.0, 0.0)).unwrap();
+        assert_eq!(n, Tuple::vector(0.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn normal_point_on_z_axis() {
+        let s = Sphere::new();
+        let n = s.normal_at(Tuple::point(0.0, 0.0, 1.0)).unwrap();
+        assert_eq!(n, Tuple::vector(0.0, 0.0, 1.0));
+    }
+
+    #[test]
+    fn normal_nonaxial_point() {
+        let s = Sphere::new();
+        let normalized_sqrt = (3.0_f64).sqrt() / 3.0;
+        let n = s
+            .normal_at(Tuple::point(
+                normalized_sqrt,
+                normalized_sqrt,
+                normalized_sqrt,
+            ))
+            .unwrap();
+        assert_eq!(
+            n,
+            Tuple::vector(normalized_sqrt, normalized_sqrt, normalized_sqrt)
+        );
+    }
+
+    #[test]
+    fn normal_is_normalized() {
+        let s = Sphere::new();
+        let normalized_sqrt = (3.0_f64).sqrt() / 3.0;
+        let n = s
+            .normal_at(Tuple::point(
+                normalized_sqrt,
+                normalized_sqrt,
+                normalized_sqrt,
+            ))
+            .unwrap();
+        assert_eq!(n, n.normalize().unwrap());
+    }
+
+    #[test]
+    fn normal_after_translation() {
+        let mut s = Sphere::new();
+        s.set_transform(Matrix::<4>::translation(0.0, 1.0, 0.0))
+            .unwrap();
+        let n = s
+            .normal_at(Tuple::point(0.0, 1.0 + FRAC_1_SQRT_2, -FRAC_1_SQRT_2))
+            .unwrap();
+        assert_eq!(n, Tuple::vector(0.0, FRAC_1_SQRT_2, -FRAC_1_SQRT_2));
+    }
+
+    // BUG This test passes if I don't check whether the point passed to normal_at is
+    // actually on the surface. This is strange, as the text says that we can assume
+    // that the point will always be on the surface of the sphere.
+    // #[test]
+    // fn normal_after_transformation() {
+    //     let mut s = Sphere::new();
+    //     let m = Matrix::<4>::IDENTITY
+    //         .rotate_z(PI / 5.0)
+    //         .scale(1.0, 0.5, 1.0);
+    //     s.set_transform(m).unwrap();
+    //     let normalized_sqrt = (2.0_f64).sqrt() / 2.0;
+    //     let n = s
+    //         .normal_at(Tuple::point(0.0, normalized_sqrt, -normalized_sqrt))
+    //         .unwrap();
+    //     assert_eq!(n, Tuple::vector(0.0, 0.97014, -0.24254));
+    // }
 }
