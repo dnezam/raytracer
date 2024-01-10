@@ -31,6 +31,6 @@ fn main() {
     }
 
     canvas
-        .save(Path::new("./circle.ppm"))
+        .save(Path::new("./images/circle.ppm"))
         .expect("Unable to save canvas.")
 }

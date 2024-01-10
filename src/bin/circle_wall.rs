@@ -43,5 +43,7 @@ fn main() {
         }
     }
 
-    canvas.save(Path::new("./circle_shrink_y.ppm")).unwrap();
+    canvas
+        .save(Path::new("./images/circle_shrink_y.ppm"))
+        .unwrap();
 }

@@ -29,7 +29,7 @@ fn main() {
         p = tick(e, p);
     }
 
-    c.save(Path::new("./projectile.ppm"))
+    c.save(Path::new("./images/projectile.ppm"))
         .expect("Unable to save canvas.")
 }
 

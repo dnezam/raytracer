@@ -28,6 +28,6 @@ fn main() {
     }
 
     canvas
-        .save(Path::new("./clock.ppm"))
+        .save(Path::new("./images/clock.ppm"))
         .expect("Unable to save canvas.")
 }
