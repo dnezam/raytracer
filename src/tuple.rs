@@ -206,6 +206,24 @@ impl Tuple {
         let z = self.x * other.y - self.y * other.x;
         Ok(Tuple::vector(x, y, z))
     }
+
+    /// Returns the vector resulting from reflecting the current vector around `normal`
+    ///
+    /// # Returns
+    /// Returns `Ok(Tuple)` containing the reflected vector if `self` is a vector and
+    /// `normal` a normalized vector.
+    /// Returns `Err(TupleError::NotAVector)` if at least one tuple is not a vector.
+    /// Returns `Err(TupleError::NotNormalized)` if `normal` isn't normalized.
+    pub fn reflect(self, normal: Self) -> Result<Self> {
+        if !self.is_vector() || !normal.is_vector() {
+            Err(TupleError::NotAVector)
+        // unwrap(): Both self and normal must be vectors here.
+        } else if !utils::eq(normal.magnitude().unwrap(), 1.0) {
+            Err(TupleError::NotNormalized)
+        } else {
+            Ok(self - normal * 2.0 * self.dot(normal).unwrap())
+        }
+    }
 }
 
 #[cfg(test)]
@@ -431,5 +449,24 @@ mod tests {
         let b = Tuple::vector(2.0, 3.0, 4.0);
         assert_eq!(a.cross(b).unwrap(), Tuple::vector(-1.0, 2.0, -1.0));
         assert_eq!(b.cross(a).unwrap(), Tuple::vector(1.0, -2.0, 1.0));
+    }
+
+    #[test]
+    fn reflect_45() {
+        let v = Tuple::vector(1.0, -1.0, 0.0);
+        let n = Tuple::vector(0.0, 1.0, 0.0);
+        let r = v.reflect(n).unwrap();
+
+        assert_eq!(r, Tuple::vector(1.0, 1.0, 0.0));
+    }
+
+    #[test]
+    fn reflect_slanted() {
+        let v = Tuple::vector(0.0, -1.0, 0.0);
+        let frc_sqrt_2_2 = (2.0_f64).sqrt() / 2.0;
+        let n = Tuple::vector(frc_sqrt_2_2, frc_sqrt_2_2, 0.0);
+        let r = v.reflect(n).unwrap();
+
+        assert_eq!(r, Tuple::vector(1.0, 0.0, 0.0));
     }
 }

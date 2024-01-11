@@ -17,6 +17,8 @@ pub enum CanvasError {
 pub enum TupleError {
     /// Indicates that a vector was expected, but not passed.
     NotAVector,
+    /// Indicates that a normalized vector was expected, but not passed.
+    NotNormalized,
 }
 
 /// An error type for ray operations.
