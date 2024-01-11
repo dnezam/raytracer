@@ -40,3 +40,17 @@ pub enum SphereError {
     /// Indicates that a point on a surface was expected, but not passed.
     NotOnSurface,
 }
+
+/// An error type for light operations.
+#[derive(Debug, PartialEq)]
+pub enum LightError {
+    /// Indicates that a point was expected, but not passed.
+    NotAPoint,
+}
+
+/// An error type for material operations.
+#[derive(Debug, PartialEq)]
+pub enum MaterialError {
+    /// Indicates that a nonnegative float was expected, but a negative float was passed instead.
+    NegativeFloat,
+}

@@ -8,6 +8,8 @@ mod canvas;
 mod color;
 mod errors;
 mod intersection;
+mod light;
+mod material;
 mod matrix;
 mod ray;
 mod sphere;

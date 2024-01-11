@@ -1,6 +1,6 @@
 use crate::intersection::{Intersection, Intersections};
 use crate::utils::{self, Object};
-use crate::{errors::SphereError, ray::Ray, tuple::Tuple, Matrix};
+use crate::{errors::SphereError, material::Material, matrix::Matrix, ray::Ray, tuple::Tuple};
 
 type Result<T> = std::result::Result<T, SphereError>;
 
@@ -11,6 +11,8 @@ pub struct Sphere {
     id: usize,
     // Invariant: Must be invertible
     transform: Matrix<4>,
+    /// Material of the sphere.
+    pub material: Material,
 }
 
 impl PartialEq for Sphere {
@@ -31,6 +33,7 @@ impl Sphere {
         Self {
             id: utils::get_id(),
             transform: Matrix::<4>::IDENTITY,
+            material: Material::default(),
         }
     }
 
@@ -311,4 +314,20 @@ mod tests {
     //         .unwrap();
     //     assert_eq!(n, Tuple::vector(0.0, 0.97014, -0.24254));
     // }
+
+    #[test]
+    fn default_material() {
+        let s = Sphere::default();
+        let m = s.material;
+        assert_eq!(m, Material::default());
+    }
+
+    #[test]
+    fn assigning_material() {
+        let mut s = Sphere::new();
+        let mut m = Material::default();
+        m.set_ambient(1.0).unwrap();
+        s.material = m;
+        assert_eq!(s.material, m);
+    }
 }
